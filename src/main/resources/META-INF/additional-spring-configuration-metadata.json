@@ -1,0 +1,22 @@
+{
+  "properties": [
+    {
+      "name": "wx.corp.corp-id",
+      "type": "java.lang.String",
+      "description": "企业微信id",
+      "defaultValue": "ww33c32b174b11bfe2"
+    },
+    {
+      "name": "wx.corp.agent-id",
+      "type": "java.lang.Integer",
+      "description": "企业微信应用id",
+      "defaultValue": 1000003
+    },
+    {
+      "name": "wx.corp.corp-secret",
+      "type": "java.lang.String",
+      "description": "企业微信应用对应的密码",
+      "defaultValue": "lAOoEseXx8zSRIZYcGpe2D3GTCUpKT86YFmRKrcR-hE"
+    }
+  ]
+}
