@@ -1,42 +1,63 @@
 package com.herui.wechatspringbootstarter;
 
 import me.chanjar.weixin.common.bean.WxAccessToken;
-import me.chanjar.weixin.common.util.ToStringUtils;
 import me.chanjar.weixin.common.util.http.apache.ApacheHttpClientBuilder;
 import me.chanjar.weixin.cp.config.WxCpConfigStorage;
-import me.chanjar.weixin.cp.config.WxCpInMemoryConfigStorage;
+import me.chanjar.weixin.cp.util.json.WxCpGsonBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import sun.management.resources.agent;
 
 import java.io.File;
+import java.io.Serializable;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @ConfigurationProperties("wx.corp")
-public class WechatProperties implements WxCpConfigStorage {
-    protected volatile String corpId;
-    protected volatile String corpSecret;
-    protected volatile String token;
-    protected volatile String accessToken;
-    protected volatile String aesKey;
-    protected volatile Integer agentId;
-    protected volatile long expiresTime;
-    protected volatile String oauth2redirectUri;
-    protected volatile String httpProxyHost;
-    protected volatile int httpProxyPort;
-    protected volatile String httpProxyUsername;
-    protected volatile String httpProxyPassword;
-    protected volatile String jsapiTicket;
-    protected volatile long jsapiTicketExpiresTime;
-    protected volatile File tmpDirFile;
+public class WechatProperties implements WxCpConfigStorage, Serializable {
+    private static final long serialVersionUID = 1154541446729462780L;
+    private volatile String corpId;
+    private volatile String corpSecret;
+    private volatile String token;
+    private volatile String accessToken;
+    private Lock accessTokenLock = new ReentrantLock();
+    private volatile String aesKey;
+    private volatile Integer agentId;
+    private volatile long expiresTime;
+    private volatile String oauth2redirectUri;
+    private volatile String httpProxyHost;
+    private volatile int httpProxyPort;
+    private volatile String httpProxyUsername;
+    private volatile String httpProxyPassword;
+    private volatile String jsapiTicket;
+    private Lock jsapiTicketLock = new ReentrantLock();
+    private volatile long jsapiTicketExpiresTime;
+    private volatile String agentJsapiTicket;
+    private Lock agentJsapiTicketLock = new ReentrantLock();
+    private volatile long agentJsapiTicketExpiresTime;
+    private volatile File tmpDirFile;
     private volatile ApacheHttpClientBuilder apacheHttpClientBuilder;
+    private volatile String baseApiUrl;
 
     public WechatProperties() {
-        this.corpId ="ww33c32b174b11bfe2";
-        this.corpSecret ="lAOoEseXx8zSRIZYcGpe2D3GTCUpKT86YFmRKrcR-hE";
-        this.agentId =1000003;
+    }
+
+    public void setBaseApiUrl(String baseUrl) {
+        this.baseApiUrl = baseUrl;
+    }
+
+    public String getApiUrl(String path) {
+        if (this.baseApiUrl == null) {
+            this.baseApiUrl = "https://qyapi.weixin.qq.com";
+        }
+
+        return this.baseApiUrl + path;
     }
 
     public String getAccessToken() {
         return this.accessToken;
+    }
+
+    public Lock getAccessTokenLock() {
+        return this.accessTokenLock;
     }
 
     public void setAccessToken(String accessToken) {
@@ -64,6 +85,10 @@ public class WechatProperties implements WxCpConfigStorage {
         return this.jsapiTicket;
     }
 
+    public Lock getJsapiTicketLock() {
+        return this.jsapiTicketLock;
+    }
+
     public void setJsapiTicket(String jsapiTicket) {
         this.jsapiTicket = jsapiTicket;
     }
@@ -83,6 +108,27 @@ public class WechatProperties implements WxCpConfigStorage {
     public synchronized void updateJsapiTicket(String jsapiTicket, int expiresInSeconds) {
         this.jsapiTicket = jsapiTicket;
         this.jsapiTicketExpiresTime = System.currentTimeMillis() + (long) (expiresInSeconds - 200) * 1000L;
+    }
+
+    public String getAgentJsapiTicket() {
+        return this.agentJsapiTicket;
+    }
+
+    public Lock getAgentJsapiTicketLock() {
+        return this.agentJsapiTicketLock;
+    }
+
+    public boolean isAgentJsapiTicketExpired() {
+        return System.currentTimeMillis() > this.agentJsapiTicketExpiresTime;
+    }
+
+    public void expireAgentJsapiTicket() {
+        this.agentJsapiTicketExpiresTime = 0L;
+    }
+
+    public void updateAgentJsapiTicket(String jsapiTicket, int expiresInSeconds) {
+        this.agentJsapiTicket = jsapiTicket;
+        this.agentJsapiTicketExpiresTime = System.currentTimeMillis() + (long) (expiresInSeconds - 200) * 1000L;
     }
 
     public void expireJsapiTicket() {
@@ -178,7 +224,7 @@ public class WechatProperties implements WxCpConfigStorage {
     }
 
     public String toString() {
-        return ToStringUtils.toSimpleString(this);
+        return WxCpGsonBuilder.create().toJson(this);
     }
 
     public File getTmpDirFile() {
@@ -191,6 +237,10 @@ public class WechatProperties implements WxCpConfigStorage {
 
     public ApacheHttpClientBuilder getApacheHttpClientBuilder() {
         return this.apacheHttpClientBuilder;
+    }
+
+    public boolean autoRefreshToken() {
+        return true;
     }
 
     public void setApacheHttpClientBuilder(ApacheHttpClientBuilder apacheHttpClientBuilder) {

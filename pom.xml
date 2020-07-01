@@ -10,7 +10,7 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <weixin-java.version>2.8.0</weixin-java.version>
+        <weixin-java.version>3.8.0</weixin-java.version>
     </properties>
 
     <dependencies>

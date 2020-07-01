@@ -1,6 +1,8 @@
 package com.herui.wechatspringbootstarter;
 
+import me.chanjar.weixin.cp.api.WxCpMediaService;
 import me.chanjar.weixin.cp.api.WxCpService;
+import me.chanjar.weixin.cp.api.impl.WxCpMediaServiceImpl;
 import me.chanjar.weixin.cp.api.impl.WxCpServiceImpl;
 import me.chanjar.weixin.cp.bean.WxCpMessage;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -19,5 +21,12 @@ public class WechatAutoConfiguration {
         WxCpService service = new WxCpServiceImpl();
         service.setWxCpConfigStorage(wechatProperties);
         return service;
+    }
+
+    @Bean
+    public WxCpMediaService wxCpMediaService(WechatProperties wechatProperties) {
+        WxCpService service = new WxCpServiceImpl();
+        service.setWxCpConfigStorage(wechatProperties);
+        return new WxCpMediaServiceImpl(service);
     }
 }
